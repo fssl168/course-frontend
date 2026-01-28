@@ -137,7 +137,7 @@ export default {
     },
     async fetchUserInfo(token) {
       try {
-        const response = await axios.get('http://localhost:5000/api/user-info', {
+        const response = await axios.get('/api/user-info', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -163,7 +163,7 @@ export default {
         console.log('从localStorage获取的用户信息:', this.user)
         console.log('调用API获取报名记录，用户ID:', this.user.id)
         console.log('认证令牌:', token)
-        console.log('API URL:', 'http://localhost:5000/api/my-courses')
+        console.log('API URL:', '/api/my-courses')
         this.isLoggedIn = true
       } else {
         // 如果缺少token或用户信息，清除登录状态
@@ -191,7 +191,7 @@ export default {
         if (this.currentStatus) {
           params.status = this.currentStatus
         }
-        const response = await axios.get('http://localhost:5000/api/courses', { params })
+        const response = await axios.get('/api/courses', { params })
         
         if (reset) {
           this.courses = response.data.courses
@@ -236,7 +236,7 @@ export default {
         return
       }
       try {
-        const response = await axios.get('http://localhost:5000/api/my-courses', {
+        const response = await axios.get('/api/my-courses', {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -273,7 +273,7 @@ export default {
           return
         }
         
-        const response = await axios.post(`http://localhost:5000/api/courses/${courseId}/register`, {}, {
+        const response = await axios.post(`/api/courses/${courseId}/register`, {}, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -333,7 +333,7 @@ export default {
     },
     wechatLogin() {
       // 跳转到微信登录授权页面
-      window.location.href = 'http://localhost:5000/api/wechat/auth'
+      window.location.href = '${import.meta.env.VITE_API_BASE_URL}/api/wechat/auth'
     }
   }
 }

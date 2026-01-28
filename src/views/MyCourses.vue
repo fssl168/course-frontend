@@ -73,8 +73,8 @@ export default {
       try {
         console.log('调用API获取报名记录，用户ID:', this.user.id)
         console.log('认证令牌:', token)
-        console.log('API URL:', 'http://localhost:5000/api/my-courses')
-        const response = await axios.get('http://localhost:5000/api/my-courses', {
+        console.log('API URL:', '/api/my-courses')
+        const response = await axios.get('/api/my-courses', {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json'

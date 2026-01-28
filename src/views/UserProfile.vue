@@ -106,7 +106,7 @@ export default {
           this.$router.push('/login')
           return
         }
-        const response = await axios.get('http://localhost:5000/api/user-profile', {
+        const response = await axios.get('/api/user-profile', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -128,7 +128,7 @@ export default {
     async updateProfile() {
       try {
         const token = localStorage.getItem('token')
-        const response = await axios.put('http://localhost:5000/api/user-profile', this.userForm, {
+        const response = await axios.put('/api/user-profile', this.userForm, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -150,7 +150,7 @@ export default {
       
       try {
         const token = localStorage.getItem('token')
-        const response = await axios.post('http://localhost:5000/api/change-password', this.passwordForm, {
+        const response = await axios.post('/api/change-password', this.passwordForm, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -169,7 +169,7 @@ export default {
     },
     getWechatPhone() {
       // 跳转到微信手机号授权页面
-      window.location.href = 'http://localhost:5000/api/wechat/phone-auth'
+      window.location.href = '${import.meta.env.VITE_API_BASE_URL}/api/wechat/phone-auth'
     },
     logout() {
       localStorage.removeItem('token')

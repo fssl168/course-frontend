@@ -47,7 +47,7 @@ export default {
   methods: {
     async register() {
       try {
-        const response = await axios.post('http://localhost:5000/api/register', this.form)
+        const response = await axios.post('/api/register', this.form)
         alert(response.data.message)
         this.$router.push('/login')
       } catch (error) {

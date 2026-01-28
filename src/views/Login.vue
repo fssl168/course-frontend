@@ -34,6 +34,7 @@ export default {
       try {
         const response = await axios.post('http://localhost:5000/api/login', this.form)
         // 存储token和用户信息到本地存储
+        console.log('登录成功，返回的用户信息:', response.data.user)
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
         alert('登录成功')

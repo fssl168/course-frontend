@@ -44,7 +44,9 @@ export default {
   },
   mounted() {
     this.checkLoginStatus()
-    if (this.isLoggedIn) {
+    console.log('mounted后用户信息:', this.user)
+    console.log('登录状态:', this.isLoggedIn)
+    if (this.isLoggedIn && this.user) {
       this.fetchRegistrations()
     }
   },
@@ -59,11 +61,39 @@ export default {
       }
     },
     async fetchRegistrations() {
+      if (!this.user || !this.user.id) {
+        console.error('用户信息不存在或没有id字段')
+        return
+      }
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('登录状态已过期，请重新登录')
+        return
+      }
       try {
-        const response = await axios.get(`http://localhost:5000/api/user-registrations/${this.user.id}`)
-        this.registrations = response.data
+        console.log('调用API获取报名记录，用户ID:', this.user.id)
+        console.log('认证令牌:', token)
+        console.log('API URL:', 'http://localhost:5000/api/my-courses')
+        const response = await axios.get('http://localhost:5000/api/my-courses', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        console.log('获取报名记录成功:', response.data)
+        // 转换数据格式以匹配前端期望的结构
+        this.registrations = response.data.map(course => ({
+          id: `reg_${course.id}`,
+          user_id: this.user.id,
+          course_id: course.id,
+          registration_date: course.registered_at,
+          course: course
+        }))
       } catch (error) {
         console.error('获取报名记录失败:', error)
+        console.error('错误详情:', error.response)
+        console.error('错误消息:', error.message)
+        console.error('错误配置:', error.config)
       }
     },
     logout() {

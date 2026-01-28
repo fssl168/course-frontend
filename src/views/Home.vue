@@ -143,6 +143,7 @@ export default {
           }
         })
         const user = response.data
+        console.log('获取到的用户信息:', user)
         localStorage.setItem('user', JSON.stringify(user))
         this.user = user
         this.isLoggedIn = true
@@ -150,13 +151,27 @@ export default {
       } catch (error) {
         console.error('获取用户信息失败:', error)
         localStorage.removeItem('token')
+        localStorage.removeItem('user')
       }
     },
     checkLoginStatus() {
       const userStr = localStorage.getItem('user')
-      if (userStr) {
+      const token = localStorage.getItem('token')
+      console.log('检查登录状态，用户信息:', userStr ? '存在' : '不存在', 'token:', token ? '存在' : '不存在')
+      if (userStr && token) {
         this.user = JSON.parse(userStr)
+        console.log('从localStorage获取的用户信息:', this.user)
+        console.log('调用API获取报名记录，用户ID:', this.user.id)
+        console.log('认证令牌:', token)
+        console.log('API URL:', 'http://localhost:5000/api/my-courses')
         this.isLoggedIn = true
+      } else {
+        // 如果缺少token或用户信息，清除登录状态
+        console.log('登录状态不完整，清除登录信息')
+        localStorage.removeItem('user')
+        localStorage.removeItem('token')
+        this.user = null
+        this.isLoggedIn = false
       }
     },
     async fetchCourses(reset = false) {
@@ -211,31 +226,70 @@ export default {
       }
     },
     async fetchUserRegistrations() {
+      if (!this.user || !this.user.id) {
+        console.error('用户信息不存在或没有id字段')
+        return
+      }
+      const token = localStorage.getItem('token')
+      if (!token) {
+        console.error('登录状态已过期，请重新登录')
+        return
+      }
       try {
-        const response = await axios.get(`http://localhost:5000/api/user-registrations/${this.user.id}`)
+        const response = await axios.get('http://localhost:5000/api/my-courses', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        console.log('获取报名记录成功:', response.data)
         // 提取已报名的课程ID
-        this.registeredCourses = response.data.map(reg => reg.course_id)
+        this.registeredCourses = response.data.map(course => course.id)
       } catch (error) {
         console.error('获取报名记录失败:', error)
       }
     },
     async registerCourse(courseId) {
+      if (!this.user || !this.user.id) {
+        alert('用户信息不存在，请重新登录')
+        return
+      }
+      const token = localStorage.getItem('token')
+      if (!token) {
+        alert('登录状态已过期，请重新登录')
+        return
+      }
       try {
+        console.log('调用API报名课程，用户ID:', this.user.id, '课程ID:', courseId)
         const course = this.courses.find(c => c.id === courseId)
+        if (!course) {
+          console.error('课程不存在:', courseId)
+          alert('课程不存在')
+          return
+        }
+        console.log('课程信息:', course)
         if (this.isCourseNotStarted(course.registration_start)) {
           alert('课程未开始，不能报名')
           return
         }
         
-        const response = await axios.post('http://localhost:5000/api/register-course', {
-          user_id: this.user.id,
-          course_id: courseId
+        const response = await axios.post(`http://localhost:5000/api/courses/${courseId}/register`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         })
+        console.log('报名成功:', response.data)
         alert(response.data.message)
         this.fetchCourses() // 刷新课程列表
         this.fetchUserRegistrations() // 刷新已报名课程列表
       } catch (error) {
-        alert(error.response.data.message)
+        console.error('报名失败:', error)
+        if (error.response && error.response.data) {
+          alert(error.response.data.message)
+        } else {
+          alert('报名失败，请稍后重试')
+        }
       }
     },
     hasRegistered(courseId) {
@@ -279,7 +333,7 @@ export default {
     },
     wechatLogin() {
       // 跳转到微信登录授权页面
-      window.location.href = 'http://localhost:5000/api/wechat/login'
+      window.location.href = 'http://localhost:5000/api/wechat/auth'
     }
   }
 }

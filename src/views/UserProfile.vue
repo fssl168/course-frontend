@@ -65,7 +65,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api/axios'
 
 export default {
   name: 'UserProfile',
@@ -106,11 +106,7 @@ export default {
           this.$router.push('/login')
           return
         }
-        const response = await axios.get('/api/user-profile', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+        const response = await api.get('/api/user-profile')
         this.user = response.data
         this.userForm = {
           username: response.data.username,
@@ -127,16 +123,10 @@ export default {
     },
     async updateProfile() {
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.put('/api/user-profile', this.userForm, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+        const response = await api.put('/api/user-profile', this.userForm)
         alert(response.data.message)
-        // 更新本地存储的用户信息
-        this.user = { ...this.user, ...this.userForm }
-        localStorage.setItem('user', JSON.stringify(this.user))
+        // 重新获取用户信息，确保地址字段正确显示
+        await this.fetchUserProfile()
       } catch (error) {
         console.error('更新个人信息失败:', error)
         alert(error.response.data.message)
@@ -149,12 +139,12 @@ export default {
       }
       
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.post('/api/change-password', this.passwordForm, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+        // 转换表单字段以匹配后端期望的字段名
+        const passwordData = {
+          current_password: this.passwordForm.oldPassword,
+          new_password: this.passwordForm.newPassword
+        }
+        const response = await api.post('/api/change-password', passwordData)
         alert(response.data.message)
         // 重置密码表单
         this.passwordForm = {
@@ -169,7 +159,8 @@ export default {
     },
     getWechatPhone() {
       // 跳转到微信手机号授权页面
-      window.location.href = '${import.meta.env.VITE_API_BASE_URL}/api/wechat/phone-auth'
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+      window.location.href = `${apiBaseUrl}/api/wechat/phone-auth`
     },
     logout() {
       localStorage.removeItem('token')

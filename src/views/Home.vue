@@ -38,17 +38,20 @@
         <div v-for="course in courses" :key="course.id" class="course-card">
           <h3>{{ course.title }}</h3>
           <p class="course-description" @click="toggleCourseDetails(course.id)" style="cursor: pointer; user-select: none;">{{ course.description.length > 35 ? course.description.substring(0, 35) + '...' : course.description }}</p>
+          <div v-if="course.image" class="course-image-container">
+            <img :src="getImageUrl(course.image)" :alt="course.title" class="course-image">
+          </div>
           <div class="course-info" @click="toggleCourseDetails(course.id)" style="cursor: pointer; user-select: none;">
-            <p><strong>日期：</strong>{{ course.date }}</p>
-            <p><strong>时间：</strong>{{ course.time }}</p>
-            <p><strong>地点：</strong>{{ course.location }}</p>
-            <p><strong>容量：</strong>{{ course.registered >= course.capacity ? '已报满' : course.registered + '/' + course.capacity }}</p>
-            <p><strong>报名时间：</strong>{{ course.registration_start }}</p>
-            <p><strong>上课时间：</strong>{{ course.class_start }}</p>
+            <p><strong>可报名人数：</strong>{{ course.registered >= course.capacity ? '已报满' : course.registered + '/' + course.capacity }}</p>
+            <p><strong>报名时间：</strong>{{ course.registration_start }} 至 {{ course.registration_end }}</p>
+            <p><strong>上课时间：</strong>{{ course.date }} {{ course.time.split('-')[0] }}:00 至 {{ course.date }} {{ course.time.split('-')[1] }}:00</p>
           </div>
           <!-- 课程详情 -->
           <div v-if="expandedCourses[course.id]" class="course-details">
             <p><strong>课程简介：</strong>{{ course.description }}</p>
+            <p><strong>日期：</strong>{{ course.date }}</p>
+            <p><strong>时间：</strong>{{ course.time }}</p>
+            <p><strong>地点：</strong>{{ course.location }}</p>
             <p><strong>报名状态：</strong>{{ getButtonText(course) }}</p>
             <p><strong>注意事项：</strong>请在报名时间内完成报名，逾期将无法报名。</p>
           </div>
@@ -80,7 +83,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api/axios'
 
 export default {
   name: 'Home',
@@ -137,11 +140,7 @@ export default {
     },
     async fetchUserInfo(token) {
       try {
-        const response = await axios.get('/api/user-info', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+        const response = await api.get('/api/user-info')
         const user = response.data
         console.log('获取到的用户信息:', user)
         localStorage.setItem('user', JSON.stringify(user))
@@ -191,7 +190,7 @@ export default {
         if (this.currentStatus) {
           params.status = this.currentStatus
         }
-        const response = await axios.get('/api/courses', { params })
+        const response = await api.get('/api/courses', { params })
         
         if (reset) {
           this.courses = response.data.courses
@@ -236,12 +235,7 @@ export default {
         return
       }
       try {
-        const response = await axios.get('/api/my-courses', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
+        const response = await api.get('/api/my-courses')
         console.log('获取报名记录成功:', response.data)
         // 提取已报名的课程ID
         this.registeredCourses = response.data.map(course => course.id)
@@ -273,12 +267,7 @@ export default {
           return
         }
         
-        const response = await axios.post(`/api/courses/${courseId}/register`, {}, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
+        const response = await api.post(`/api/courses/${courseId}/register`, {})
         console.log('报名成功:', response.data)
         alert(response.data.message)
         this.fetchCourses() // 刷新课程列表
@@ -333,7 +322,19 @@ export default {
     },
     wechatLogin() {
       // 跳转到微信登录授权页面
-      window.location.href = '${import.meta.env.VITE_API_BASE_URL}/api/wechat/auth'
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+      window.location.href = `${apiBaseUrl}/api/wechat/auth`
+    },
+    getImageUrl(imagePath) {
+      // 处理课程图片的 URL
+      if (!imagePath) return ''
+      if (imagePath.startsWith('http')) {
+        return imagePath
+      }
+      // 确保 imagePath 以 / 开头
+      const normalizedPath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+      return `${apiBaseUrl}${normalizedPath}`
     }
   }
 }
@@ -580,6 +581,18 @@ export default {
   margin: 8px 0;
   color: #555;
   line-height: 1.4;
+}
+
+.course-image-container {
+  margin: 10px 0;
+  text-align: center;
+}
+
+.course-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-register {

@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api/axios'
 
 export default {
   name: 'Login',
@@ -32,7 +32,7 @@ export default {
   methods: {
     async login() {
       try {
-        const response = await axios.post('/api/login', this.form)
+        const response = await api.post('/api/login', this.form)
         // 存储token和用户信息到本地存储
         console.log('登录成功，返回的用户信息:', response.data.user)
         localStorage.setItem('token', response.data.token)

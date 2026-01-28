@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api/axios'
 
 export default {
   name: 'MyCourses',
@@ -74,12 +74,7 @@ export default {
         console.log('调用API获取报名记录，用户ID:', this.user.id)
         console.log('认证令牌:', token)
         console.log('API URL:', '/api/my-courses')
-        const response = await axios.get('/api/my-courses', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
+        const response = await api.get('/api/my-courses')
         console.log('获取报名记录成功:', response.data)
         // 转换数据格式以匹配前端期望的结构
         this.registrations = response.data.map(course => ({

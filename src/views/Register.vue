@@ -22,6 +22,10 @@
         <label for="organization">单位</label>
         <input type="text" id="organization" v-model="form.organization" required>
       </div>
+            <div class="form-group">
+        <label for="address">地址</label>
+        <input type="text" id="address" v-model="form.address" required>
+      </div>
       <button type="submit" class="btn-submit">注册</button>
       <p class="login-link">已有账号？<router-link to="/login">去登录</router-link></p>
     </form>
@@ -29,7 +33,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import api from '../api/axios'
 
 export default {
   name: 'Register',
@@ -40,14 +44,15 @@ export default {
         email: '',
         password: '',
         phone: '',
-        organization: ''
+        organization: '',
+        address: ''
       }
     }
   },
   methods: {
     async register() {
       try {
-        const response = await axios.post('/api/register', this.form)
+        const response = await api.post('/api/register', this.form)
         alert(response.data.message)
         this.$router.push('/login')
       } catch (error) {

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { reportPageView } from '../api/axios'
 import Register from '../views/Register.vue'
 import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
@@ -138,20 +139,29 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // 检查是否是管理后台路由
   if (to.path.startsWith('/admin')) {
-    const user = JSON.parse(localStorage.getItem('user'))
+    let user = null
+    try {
+      user = JSON.parse(localStorage.getItem('user'))
+    } catch (e) {
+      localStorage.removeItem('user')
+      localStorage.removeItem('token')
+    }
     // 检查用户是否登录且是管理员
     if (!user || !user.is_admin) {
-      // 未登录或不是管理员，重定向到登录页
       alert('请以管理员身份登录')
       next('/login')
     } else {
-      // 是管理员，允许访问
       next()
     }
   } else {
-    // 非管理后台路由，直接放行
     next()
   }
+})
+
+// 路由切换后上报页面访问日志
+router.afterEach((to) => {
+  const pageTitle = to.name || to.meta?.title || document.title
+  reportPageView(pageTitle)
 })
 
 export default router

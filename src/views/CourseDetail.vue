@@ -80,7 +80,7 @@
 
         <div class="section" v-if="course.content">
           <h2 class="section-title">课程内容</h2>
-          <div class="section-content" v-html="course.content"></div>
+          <div class="section-content" v-text="course.content"></div>
         </div>
 
         <div class="section" v-if="course.target_audience">
@@ -198,13 +198,16 @@ export default {
       this.loading = true
       try {
         const response = await api.get(`/api/courses/${courseId}`)
-        this.course = response.data.course || response.data
+        this.course = response.course || response
       } catch (error) {
         console.error('加载课程详情失败:', error)
         this.course = null
       } finally {
         this.loading = false
       }
+    },
+    sanitizeHtml(html) {
+      return DOMPurify.sanitize(html)
     },
     logout() {
       localStorage.removeItem('token')
